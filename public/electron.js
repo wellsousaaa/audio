@@ -1,15 +1,21 @@
 const path = require("path");
 
-const { app, BrowserWindow, ipcMain } = require("electron");
+const { app, BrowserWindow, ipcMain, dialog } = require("electron");
 const isDev = require("electron-is-dev");
+const fs = require("fs");
+
+const appData = app.getPath("appData") + "/audio_teste/audios";
+
+let win;
 
 function createWindow() {
   // Create the browser window.
-  const win = new BrowserWindow({
+  win = new BrowserWindow({
     width: 800,
     height: 600,
     webPreferences: {
       nodeIntegration: true,
+      contextIsolation: false,
     },
   });
 
@@ -46,6 +52,12 @@ app.on("activate", () => {
   }
 });
 
-ipcMain.handle("open-file", async () => {
-  return mainWin.minimize();
+ipcMain.handle("open-file", async (_, fileName) => {
+  return dialog.showOpenDialog({ properties: ['openFile'] }).then(async (results) => {
+    if(results.canceled) return;
+
+    const buf = await fs.promises.readFile(results.filePaths[0]);
+    await fs.promises.writeFile(`${appData}/${fileName}.mp3`, buf)
+    return buf;
+  });
 });

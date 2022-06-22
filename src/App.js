@@ -10,8 +10,13 @@ function App() {
 
   const onKeyPress = async (button) => {
     console.log("Button pressed", button);
-    const file = await ipcRenderer.invoke("open-file");
-    console.log(file);
+    const file = await ipcRenderer.invoke("open-file", button);
+    if(!file) return;
+    
+    const source = AudioContext.createBufferSource();
+    source.buffer = file;
+    source.connect(AudioContext.destination);
+    source.start(0);
   };
 
   useEffect(() => {
